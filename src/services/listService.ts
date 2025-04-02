@@ -7,7 +7,7 @@ import {
   doc,
 } from "firebase/firestore";
 
-const todoCollection = collection(db, "documents");
+const todoCollection = collection(db, `documents/{user.uid}`);
 
 export const addTodo = async (todo: any) => {
   return await addDoc(todoCollection, todo);

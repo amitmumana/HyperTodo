@@ -4,8 +4,13 @@ import { ItemList } from "../components/ItemList";
 import { Navbar } from "../components/Navbar";
 import { NoteDetails } from "../components/NoteDetails";
 import { Sidebar } from "../components/Sidebar";
+import { useStore } from "../store";
 
 const Home = () => {
+  const { user } = useStore();
+
+  console.log(user, "this is user stored");
+
   return (
     <div className="min-h-screen bg-gray-100 dark:bg-gray-900">
       <Navbar />

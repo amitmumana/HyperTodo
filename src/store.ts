@@ -1,6 +1,8 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
-import { Store } from "./types";
+import { Item, Store } from "./types";
+import { db } from "./lib/firebase";
+import { collection, query, where, onSnapshot } from "firebase/firestore";
 
 export const useStore = create<Store>()(
   persist(
@@ -14,6 +16,7 @@ export const useStore = create<Store>()(
       selectedType: "all",
       selectedTag: null,
       isUser: null,
+      user: null,
       addItem: (item) =>
         set((state) => ({
           items: [
@@ -51,6 +54,29 @@ export const useStore = create<Store>()(
       setEditingItem: (item) => set({ editingItem: item }),
       setSelectedType: (type) => set({ selectedType: type, selectedTag: null }),
       setSelectedTag: (tag) => set({ selectedTag: tag, selectedType: "tags" }),
+      setUser: (user) => {
+        set({ user });
+        if (user) {
+          // Subscribe to user's items when user is set
+          const q = query(
+            collection(db, "items"),
+            where("uid", "==", user.uid)
+          );
+
+          const unsubscribe = onSnapshot(q, (snapshot) => {
+            const items = snapshot.docs.map((doc) => ({
+              id: doc.id,
+              ...doc.data(),
+            })) as Item[];
+            set({ items });
+          });
+
+          // You might want to store unsubscribe function if you need to clean up later
+          return () => unsubscribe();
+        } else {
+          set({ items: [] }); // Clear items when user logs out
+        }
+      },
     }),
     {
       name: "items-storage",

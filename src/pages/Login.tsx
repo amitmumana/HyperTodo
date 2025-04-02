@@ -1,33 +1,33 @@
+// Login.tsx
 import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-// import { useAuthStore } from "../store";
 import { LogIn } from "lucide-react";
 import { auth } from "../lib/firebase";
 import { signInWithEmailAndPassword } from "firebase/auth";
+import { useStore } from "../store";
 
 export function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
-  //   const signIn = useAuthStore((state) => state.signIn);
   const navigate = useNavigate();
+  const { setUser } = useStore(); // Get the setUser action from store
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    signInWithEmailAndPassword(auth, email, password)
-      .then((res) => {
-        console.log(res.user, "response");
-      })
-      .catch((err) => {
-        console.log(err);
-      });
-
-    // try {
-    //   //   await signIn(email, password);
-    //   navigate("/");
-    // } catch (err) {
-    //   setError("Invalid email or password");
-    // }
+    try {
+      const userCredential = await signInWithEmailAndPassword(
+        auth,
+        email,
+        password
+      );
+      const user = userCredential.user;
+      setUser(user);
+      navigate("/home");
+    } catch (err) {
+      console.log(err);
+      setError("Invalid email or password");
+    }
   };
 
   return (

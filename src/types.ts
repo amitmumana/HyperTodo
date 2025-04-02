@@ -1,4 +1,5 @@
 export type ItemType = "url" | "note" | "todo";
+import { User } from "firebase/auth";
 
 export interface Item {
   id: string;
@@ -22,6 +23,7 @@ export interface Store {
   selectedType: ItemType | "all" | "tags";
   selectedTag: string | null;
   isUser: any;
+  user: User | null;
   addItem: (item: Omit<Item, "id" | "createdAt">) => void;
   updateItem: (
     id: string,
@@ -36,4 +38,5 @@ export interface Store {
   setEditingItem: (item: Item | null) => void;
   setSelectedType: (type: ItemType | "all" | "tags") => void;
   setSelectedTag: (tag: string | null) => void;
+  setUser: (user: User | null) => void;
 }

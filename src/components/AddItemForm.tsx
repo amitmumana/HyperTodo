@@ -1,55 +1,71 @@
-import { useState } from 'react';
-import { Plus, X, Hash } from 'lucide-react';
-import { useStore } from '../store';
-import { ItemType } from '../types';
+import { useState } from "react";
+import { Plus, X, Hash } from "lucide-react";
+import { useStore } from "../store";
+import { ItemType } from "../types";
+import { db } from "../lib/firebase";
+import { addDoc, collection, doc, setDoc } from "firebase/firestore";
 
 export function AddItemForm() {
   const [isOpen, setIsOpen] = useState(false);
-  const [type, setType] = useState<ItemType>('note');
-  const [title, setTitle] = useState('');
-  const [content, setContent] = useState('');
-  const [url, setUrl] = useState('');
-  const [tagInput, setTagInput] = useState('');
+  const [type, setType] = useState<ItemType>("note");
+  const [title, setTitle] = useState("");
+  const [content, setContent] = useState("");
+  const [url, setUrl] = useState("");
+  const [tagInput, setTagInput] = useState("");
   const [tags, setTags] = useState<string[]>([]);
-  
-  const { addItem } = useStore();
+
+  const { user } = useStore();
+
+  // const { addItem } = useStore();
 
   const handleAddTag = () => {
     const trimmedTag = tagInput.trim();
     if (trimmedTag && !tags.includes(trimmedTag)) {
       setTags([...tags, trimmedTag]);
-      setTagInput('');
+      setTagInput("");
     }
   };
 
   const handleRemoveTag = (tagToRemove: string) => {
-    setTags(tags.filter(tag => tag !== tagToRemove));
+    setTags(tags.filter((tag) => tag !== tagToRemove));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
-    let favicon = '';
-    if (type === 'url' && url) {
+
+    let favicon = "";
+    if (type === "url" && url) {
       try {
-        favicon = `https://www.google.com/s2/favicons?domain=${new URL(url).hostname}&sz=128`;
+        favicon = `https://www.google.com/s2/favicons?domain=${
+          new URL(url).hostname
+        }&sz=128`;
       } catch (error) {
-        console.error('Invalid URL');
+        console.error("Invalid URL");
       }
     }
 
-    addItem({
-      type,
-      title,
-      content,
-      tags: tags.length > 0 ? tags : undefined,
-      ...(type === 'url' && { url, favicon }),
-      ...(type === 'todo' && { completed: false }),
-    });
+    const userUid = user?.uid;
+    const todosCollectionRef = collection(db, `documents/${userUid}/todos`);
 
-    setTitle('');
-    setContent('');
-    setUrl('');
+    try {
+      await addDoc(todosCollectionRef, {
+        type,
+        title,
+        content,
+        tags: tags.length > 0 ? tags : undefined,
+        ...(type === "url" && { url, favicon }),
+        ...(type === "todo" && { completed: false }),
+        createdAt: new Date(),
+      });
+
+      console.log("Item added successfully!");
+    } catch (error) {
+      console.error("Error adding item: ", error);
+    }
+
+    setTitle("");
+    setContent("");
+    setUrl("");
     setTags([]);
     setIsOpen(false);
   };
@@ -107,7 +123,7 @@ export function AddItemForm() {
                 />
               </div>
 
-              {type === 'url' && (
+              {type === "url" && (
                 <div>
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
                     URL
@@ -124,7 +140,7 @@ export function AddItemForm() {
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                  {type === 'note' ? 'Content' : 'Description'}
+                  {type === "note" ? "Content" : "Description"}
                 </label>
                 <textarea
                   value={content}
@@ -144,7 +160,9 @@ export function AddItemForm() {
                     type="text"
                     value={tagInput}
                     onChange={(e) => setTagInput(e.target.value)}
-                    onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), handleAddTag())}
+                    onKeyPress={(e) =>
+                      e.key === "Enter" && (e.preventDefault(), handleAddTag())
+                    }
                     placeholder="Add a tag"
                     className="block flex-1 rounded-md border-gray-300 dark:border-gray-600 shadow-sm focus:border-blue-500 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
                   />

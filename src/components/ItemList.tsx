@@ -1,21 +1,63 @@
-import { useState } from 'react';
-import { useInView } from 'react-intersection-observer';
-import { useStore } from '../store';
-import { Item } from '../types';
-import { Check, ExternalLink, Trash, Edit, X, Hash } from 'lucide-react';
+import { useEffect, useState } from "react";
+import { useInView } from "react-intersection-observer";
+import { useStore } from "../store";
+import { Item } from "../types";
+import { Check, ExternalLink, Trash, Edit, X, Hash } from "lucide-react";
+import { collection, getDocs, limit, orderBy, query } from "firebase/firestore";
+import { db } from "../lib/firebase";
 
 export function ItemList() {
   const {
-    items,
+    user,
     searchQuery,
     selectedType,
     selectedTag,
     toggleTodo,
     deleteItem,
     setSelectedNoteId,
-    setEditingItem
+    setEditingItem,
   } = useStore();
-  
+
+  const [items, setItems] = useState<any>([]);
+
+  const fetchTodos = async (userUid: string) => {
+    if (!userUid) {
+      console.error("User UID is missing");
+      return;
+    }
+
+    try {
+      const todosCollectionRef = collection(db, `documents/${userUid}/todos`);
+
+      const todosQuery = query(
+        todosCollectionRef,
+        orderBy("createdAt", "desc"),
+        limit(10)
+      );
+
+      const querySnapshot = await getDocs(todosQuery);
+
+      const todos = querySnapshot.docs.map((doc) => ({
+        id: doc.id,
+        ...doc.data(),
+      }));
+
+      setItems(todos);
+      console.log("Fetched Todos:", todos);
+      return todos;
+    } catch (error) {
+      console.error("Error fetching todos:", error);
+      return [];
+    }
+  };
+
+  useEffect(() => {
+    const userId = user?.uid;
+    if (userId) {
+      fetchTodos(userId);
+    }
+  }, [user]);
+
   const [ref, inView] = useInView({
     threshold: 0,
     triggerOnce: true,
@@ -34,21 +76,21 @@ export function ItemList() {
     clearTimeout(longPressTimer);
   };
 
-  const filteredItems = items.filter((item) => {
-    const matchesSearch =
-      item.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      item.content.toLowerCase().includes(searchQuery.toLowerCase());
+  // const filteredItems = items.filter((item) => {
+  //   const matchesSearch =
+  //     item.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+  //     item.content.toLowerCase().includes(searchQuery.toLowerCase());
 
-    const matchesType =
-      selectedType === 'all' ||
-      (selectedType === 'tags' ? true : selectedType === item.type);
+  //   const matchesType =
+  //     selectedType === 'all' ||
+  //     (selectedType === 'tags' ? true : selectedType === item.type);
 
-    const matchesTag =
-      !selectedTag ||
-      (item.tags && item.tags.includes(selectedTag));
+  //   const matchesTag =
+  //     !selectedTag ||
+  //     (item.tags && item.tags.includes(selectedTag));
 
-    return matchesSearch && matchesType && matchesTag;
-  });
+  //   return matchesSearch && matchesType && matchesTag;
+  // });
 
   const renderItem = (item: Item) => {
     const isLongPressed = longPressItem === item.id;
@@ -109,7 +151,7 @@ export function ItemList() {
     );
 
     switch (item.type) {
-      case 'url':
+      case "url":
         return (
           <div
             {...itemProps}
@@ -138,7 +180,7 @@ export function ItemList() {
           </div>
         );
 
-      case 'note':
+      case "note":
         return (
           <div
             {...itemProps}
@@ -156,7 +198,7 @@ export function ItemList() {
           </div>
         );
 
-      case 'todo':
+      case "todo":
         return (
           <div
             {...itemProps}
@@ -167,20 +209,18 @@ export function ItemList() {
               onClick={() => !isLongPressed && toggleTodo(item.id)}
               className={`flex-shrink-0 w-6 h-6 rounded-full border-2 ${
                 item.completed
-                  ? 'bg-green-500 border-green-500'
-                  : 'border-gray-300 dark:border-gray-600'
+                  ? "bg-green-500 border-green-500"
+                  : "border-gray-300 dark:border-gray-600"
               }`}
             >
-              {item.completed && (
-                <Check className="w-5 h-5 text-white" />
-              )}
+              {item.completed && <Check className="w-5 h-5 text-white" />}
             </button>
             <div className="flex-1">
               <h3
                 className={`text-lg font-medium ${
                   item.completed
-                    ? 'text-gray-500 dark:text-gray-400 line-through'
-                    : 'text-gray-900 dark:text-white'
+                    ? "text-gray-500 dark:text-gray-400 line-through"
+                    : "text-gray-900 dark:text-white"
                 }`}
               >
                 {item.title}
@@ -188,8 +228,8 @@ export function ItemList() {
               <p
                 className={`text-sm ${
                   item.completed
-                    ? 'text-gray-400 dark:text-gray-500 line-through'
-                    : 'text-gray-600 dark:text-gray-300'
+                    ? "text-gray-400 dark:text-gray-500 line-through"
+                    : "text-gray-600 dark:text-gray-300"
                 }`}
               >
                 {item.content}
@@ -203,7 +243,7 @@ export function ItemList() {
 
   return (
     <div className="space-y-4">
-      {filteredItems.map((item, index) => (
+      {items.map((item: any, index: number) => (
         <div key={item.id} ref={index === items.length - 5 ? ref : undefined}>
           {renderItem(item)}
         </div>
