@@ -3,32 +3,28 @@ import { useInView } from "react-intersection-observer";
 import { useStore } from "../store";
 import { Item } from "../types";
 import { Check, ExternalLink, Trash, Edit, X, Hash } from "lucide-react";
-import { collection, getDocs, limit, orderBy, query } from "firebase/firestore";
+import {
+  collection,
+  doc,
+  getDocs,
+  limit,
+  orderBy,
+  query,
+  updateDoc,
+} from "firebase/firestore";
 import { db } from "../lib/firebase";
 
 export function ItemList() {
-  const {
-    user,
-    searchQuery,
-    selectedType,
-    selectedTag,
-    toggleTodo,
-    deleteItem,
-    setSelectedNoteId,
-    setEditingItem,
-  } = useStore();
+  const { user, deleteItem, setSelectedNoteId, setEditingItem } = useStore();
+  const [items, setItems] = useState<Item[]>([]);
 
-  const [items, setItems] = useState<any>([]);
+  const CACHE_KEY = "cached_items";
 
   const fetchTodos = async (userUid: string) => {
-    if (!userUid) {
-      console.error("User UID is missing");
-      return;
-    }
+    if (!userUid) return;
 
     try {
       const todosCollectionRef = collection(db, `documents/${userUid}/todos`);
-
       const todosQuery = query(
         todosCollectionRef,
         orderBy("createdAt", "desc"),
@@ -36,13 +32,15 @@ export function ItemList() {
       );
 
       const querySnapshot = await getDocs(todosQuery);
-
       const todos = querySnapshot.docs.map((doc) => ({
         id: doc.id,
         ...doc.data(),
-      }));
+      })) as Item[];
 
+      // Update local state and cache
       setItems(todos);
+      localStorage.setItem(CACHE_KEY, JSON.stringify(todos));
+
       console.log("Fetched Todos:", todos);
       return todos;
     } catch (error) {
@@ -52,11 +50,37 @@ export function ItemList() {
   };
 
   useEffect(() => {
-    const userId = user?.uid;
-    if (userId) {
-      fetchTodos(userId);
+    // Load cached items first
+    const cachedItems = localStorage.getItem(CACHE_KEY);
+    if (cachedItems) {
+      setItems(JSON.parse(cachedItems));
+    }
+
+    // Fetch from Firestore if user is online
+    if (navigator.onLine && user?.uid) {
+      fetchTodos(user.uid);
     }
   }, [user]);
+
+  const toggleTodo = async (id: string) => {
+    try {
+      const todoRef = doc(db, `documents/${user?.uid}/todos`, id);
+      await updateDoc(todoRef, {
+        completed: !items.find((item) => item.id === id)?.completed,
+      });
+
+      // Update local state and cache
+      setItems((prevItems: any) => {
+        const updatedItems = prevItems.map((item: any) =>
+          item.id === id ? { ...item, completed: !item.completed } : item
+        );
+        localStorage.setItem(CACHE_KEY, JSON.stringify(updatedItems));
+        return updatedItems;
+      });
+    } catch (error) {
+      console.error("Error toggling todo:", error);
+    }
+  };
 
   const [ref, inView] = useInView({
     threshold: 0,

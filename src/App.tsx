@@ -1,8 +1,16 @@
 import { useEffect, useState } from "react";
 import { useStore } from "./store";
-import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
+import {
+  BrowserRouter as Router,
+  Route,
+  Routes,
+  Navigate,
+} from "react-router-dom";
 import Home from "./pages/Home";
-import { Login } from "./pages/Login";
+import Login from "./pages/auth/Login";
+import { getCookie } from "./utils/getCookie";
+import { onAuthStateChanged } from "firebase/auth";
+import { auth } from "./lib/firebase";
 
 interface BeforeInstallPromptEvent extends Event {
   prompt: () => Promise<void>;
@@ -10,7 +18,7 @@ interface BeforeInstallPromptEvent extends Event {
 }
 
 function App() {
-  const { isDarkMode, isUser } = useStore();
+  const { isDarkMode, setUser } = useStore();
   const [deferredPrompt, setDeferredPrompt] =
     useState<BeforeInstallPromptEvent | null>(null);
 
@@ -23,9 +31,19 @@ function App() {
   }, [isDarkMode]);
 
   useEffect(() => {
-    // getTodos().then(setTodos);
+    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
+      setUser(currentUser);
 
-    // Listen for beforeinstallprompt event
+      if (!currentUser) {
+        document.cookie =
+          "authToken=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
+      }
+    });
+
+    return () => unsubscribe();
+  }, [setUser]);
+
+  useEffect(() => {
     window.addEventListener("beforeinstallprompt", (event: Event) => {
       event.preventDefault();
       setDeferredPrompt(event as BeforeInstallPromptEvent);
@@ -46,12 +64,67 @@ function App() {
     }
   };
 
+  const ProtectedRoute = ({ children }: { children: JSX.Element }) => {
+    const token = getCookie("authToken");
+    return token ? children : <Navigate to="/login" replace />;
+  };
+
+  const PublicRoute = ({ children }: { children: JSX.Element }) => {
+    const token = getCookie("authToken");
+    return token ? <Navigate to="/home" replace /> : children;
+  };
+
   return (
     <>
       <Router>
         <Routes>
-          <Route path="/" element={<Login />} />
-          <Route path="/home" element={<Home />} />
+          <Route
+            path="/login"
+            element={
+              <PublicRoute>
+                <Login />
+              </PublicRoute>
+            }
+          />
+          {/* <Route
+            path="/signup"
+            element={
+              <PublicRoute>
+                <SignUp />
+              </PublicRoute>
+            }
+          />
+
+          <Route
+            path="/forgot-password"
+            element={
+              <PublicRoute>
+                <ForgotPassword />
+              </PublicRoute>
+            }
+          /> */}
+
+          <Route
+            path="/home"
+            element={
+              <ProtectedRoute>
+                <Home />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/"
+            element={
+              getCookie("authToken") ? (
+                <Navigate to="/home" replace />
+              ) : (
+                <Navigate to="/login" replace />
+              )
+            }
+          />
+
+          <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </Router>
       {deferredPrompt && (

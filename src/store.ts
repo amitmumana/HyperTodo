@@ -1,8 +1,9 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import { Item, Store } from "./types";
-import { db } from "./lib/firebase";
+import { auth, db } from "./lib/firebase";
 import { collection, query, where, onSnapshot } from "firebase/firestore";
+import { signOut } from "firebase/auth";
 
 export const useStore = create<Store>()(
   persist(
@@ -76,6 +77,12 @@ export const useStore = create<Store>()(
         } else {
           set({ items: [] }); // Clear items when user logs out
         }
+      },
+      logout: async () => {
+        await signOut(auth);
+        set({ user: null });
+        document.cookie =
+          "authToken=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
       },
     }),
     {
