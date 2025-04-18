@@ -39,7 +39,6 @@ export function ItemList() {
 
       // Update local state and cache
       setItems(todos);
-      localStorage.setItem(CACHE_KEY, JSON.stringify(todos));
 
       console.log("Fetched Todos:", todos);
       return todos;
@@ -56,7 +55,6 @@ export function ItemList() {
       setItems(JSON.parse(cachedItems));
     }
 
-    // Fetch from Firestore if user is online
     if (navigator.onLine && user?.uid) {
       fetchTodos(user.uid);
     }
@@ -69,12 +67,10 @@ export function ItemList() {
         completed: !items.find((item) => item.id === id)?.completed,
       });
 
-      // Update local state and cache
       setItems((prevItems: any) => {
         const updatedItems = prevItems.map((item: any) =>
           item.id === id ? { ...item, completed: !item.completed } : item
         );
-        localStorage.setItem(CACHE_KEY, JSON.stringify(updatedItems));
         return updatedItems;
       });
     } catch (error) {
@@ -99,22 +95,6 @@ export function ItemList() {
   const handleTouchEnd = () => {
     clearTimeout(longPressTimer);
   };
-
-  // const filteredItems = items.filter((item) => {
-  //   const matchesSearch =
-  //     item.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-  //     item.content.toLowerCase().includes(searchQuery.toLowerCase());
-
-  //   const matchesType =
-  //     selectedType === 'all' ||
-  //     (selectedType === 'tags' ? true : selectedType === item.type);
-
-  //   const matchesTag =
-  //     !selectedTag ||
-  //     (item.tags && item.tags.includes(selectedTag));
-
-  //   return matchesSearch && matchesType && matchesTag;
-  // });
 
   const renderItem = (item: Item) => {
     const isLongPressed = longPressItem === item.id;

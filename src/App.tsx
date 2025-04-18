@@ -76,17 +76,18 @@ function App() {
 
   return (
     <>
-      <Router>
-        <Routes>
-          <Route
-            path="/login"
-            element={
-              <PublicRoute>
-                <Login />
-              </PublicRoute>
-            }
-          />
-          {/* <Route
+      <div className="bg-white  dark:bg-gray-900">
+        <Router>
+          <Routes>
+            <Route
+              path="/login"
+              element={
+                <PublicRoute>
+                  <Login />
+                </PublicRoute>
+              }
+            />
+            {/* <Route
             path="/signup"
             element={
               <PublicRoute>
@@ -104,32 +105,33 @@ function App() {
             }
           /> */}
 
-          <Route
-            path="/home"
-            element={
-              <ProtectedRoute>
-                <Home />
-              </ProtectedRoute>
-            }
-          />
+            <Route
+              path="/home"
+              element={
+                <ProtectedRoute>
+                  <Home />
+                </ProtectedRoute>
+              }
+            />
 
-          <Route
-            path="/"
-            element={
-              getCookie("authToken") ? (
-                <Navigate to="/home" replace />
-              ) : (
-                <Navigate to="/login" replace />
-              )
-            }
-          />
+            <Route
+              path="/"
+              element={
+                getCookie("authToken") ? (
+                  <Navigate to="/home" replace />
+                ) : (
+                  <Navigate to="/login" replace />
+                )
+              }
+            />
 
-          <Route path="*" element={<Navigate to="/" replace />} />
-        </Routes>
-      </Router>
-      {deferredPrompt && (
-        <button onClick={handleInstallClick}>Install App</button>
-      )}
+            <Route path="*" element={<Navigate to="/" replace />} />
+          </Routes>
+        </Router>
+        {deferredPrompt && (
+          <button onClick={handleInstallClick}>Install App</button>
+        )}
+      </div>
     </>
   );
 }

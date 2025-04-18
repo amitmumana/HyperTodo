@@ -74,7 +74,7 @@ export function AddItemForm() {
     <>
       <button
         onClick={() => setIsOpen(true)}
-        className="fixed bottom-6 right-6 w-14 h-14 bg-blue-500 hover:bg-blue-600 text-white rounded-full shadow-lg flex items-center justify-center transition-colors duration-200"
+        className=" fixed bg-gray-900 dark:bg-gray-200 dark:text-black text-white rounded-full p-4 shadow-lg hover:bg-gray-800 transition-colors bottom-6 right-6 w-14 h-14  flex items-center justify-center duration-200"
       >
         <Plus className="w-6 h-6" />
       </button>

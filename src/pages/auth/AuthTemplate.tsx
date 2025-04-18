@@ -13,7 +13,7 @@ const AuthTemplate = ({ title, error, children }: AuthTemplateProps) => {
       <div className="relative w-full max-w-md p-4 sm:p-8">
         <div className="sm:bg-white sm:rounded-3xl sm:shadow-xl sm:overflow-hidden">
           <div className="px-4 sm:px-8 pt-8 pb-6">
-            <h2 className="text-2xl font-bold text-gray-800 text-left sm:text-center mb-8">
+            <h2 className="text-3xl font-bold text-gray-800 text-left sm:text-center mb-8">
               {title}
             </h2>
 

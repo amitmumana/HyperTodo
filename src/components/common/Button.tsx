@@ -18,12 +18,14 @@ export function Button({
   loading = false,
   ...props
 }: ButtonProps) {
-  const baseStyles = "font-medium transition-colors rounded-xl py-3 px-4";
+  const baseStyles =
+    "w-full py-3.5 px-6 rounded-full font-medium text-center transition-colors";
   const variantStyles = {
-    primary: "bg-teal-600 text-white hover:bg-teal-700",
+    primary: "bg-gray-900 text-white hover:bg-gray-800 ",
     secondary:
-      "bg-gray-200 text-gray-700 hover:bg-gray-300 dark:bg-gray-700 dark:text-gray-200 ",
+      "border border-gray-200 text-gray-600 hover:bg-gray-50 dark:text-white",
   };
+
   const widthStyles = fullWidth ? "w-full" : "";
 
   return (
