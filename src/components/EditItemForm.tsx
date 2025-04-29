@@ -35,9 +35,45 @@ export function EditItemForm() {
     setTags(tags.filter((tag) => tag !== tagToRemove));
   };
 
+  // const handleSubmit = async (e: React.FormEvent) => {
+  //   e.preventDefault();
+
+  //   if (!editingItem) return;
+
+  //   let favicon = "";
+  //   if (editingItem.type === "url" && url) {
+  //     try {
+  //       favicon = `https://www.google.com/s2/favicons?domain=${
+  //         new URL(url).hostname
+  //       }&sz=128`;
+  //     } catch (error) {
+  //       console.error("Invalid URL");
+  //     }
+  //   }
+
+  //   const userUid = useStore.getState().user?.uid;
+  //   console.log(userUid, "this is user uid");
+  //   const docRef = doc(db, `documents/${userUid}/todos/${editingItem.id}`);
+
+  //   try {
+  //     await updateDoc(docRef, {
+  //       title,
+  //       content,
+  //       tags: tags.length > 0 ? tags : [],
+  //       ...(editingItem.type === "url" && { url, favicon }),
+  //       updatedAt: new Date(),
+  //     });
+
+  //     console.log("Item updated successfully!");
+  //   } catch (error) {
+  //     console.error("Error updating item:", error);
+  //   }
+
+  //   setEditingItem(null);
+  // };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-
     if (!editingItem) return;
 
     let favicon = "";
@@ -51,23 +87,14 @@ export function EditItemForm() {
       }
     }
 
-    const userUid = useStore.getState().user?.uid;
-    console.log(userUid, "this is user uid");
-    const docRef = doc(db, `documents/${userUid}/todos/${editingItem.id}`);
-
-    try {
-      await updateDoc(docRef, {
-        title,
-        content,
-        tags: tags.length > 0 ? tags : [],
-        ...(editingItem.type === "url" && { url, favicon }),
-        updatedAt: new Date(),
-      });
-
-      console.log("Item updated successfully!");
-    } catch (error) {
-      console.error("Error updating item:", error);
-    }
+    await updateItem({
+      id: editingItem.id,
+      title,
+      content,
+      url: editingItem.type === "url" ? url : undefined,
+      tags,
+      favicon: editingItem.type === "url" ? favicon : undefined,
+    });
 
     setEditingItem(null);
   };

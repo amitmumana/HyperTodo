@@ -5,8 +5,6 @@ import { auth, db } from "./lib/firebase";
 import {
   collection,
   query,
-  where,
-  onSnapshot,
   addDoc,
   orderBy,
   startAfter,
@@ -30,16 +28,12 @@ export const useStore = create<Store>()(
       selectedTag: null,
       isUser: null,
       user: null,
-
-      ////////////
       lastDoc: null,
       hasMore: true,
       loading: false,
 
-      // Adding item //
-
       addItem: async (newItem) => {
-        const user = get().user; // get current user from store
+        const user = get().user;
         if (!user) return;
 
         const todosCollectionRef = collection(
@@ -68,8 +62,6 @@ export const useStore = create<Store>()(
           console.error("Error adding item: ", error);
         }
       },
-
-      // Fetching items //
 
       fetchMoreItems: async () => {
         const { user, loading, hasMore, lastDoc, items } = get();
@@ -124,14 +116,52 @@ export const useStore = create<Store>()(
         }
       },
 
-      updateItem: (id, updatedItem) =>
-        set((state) => ({
-          items: state.items.map((item) =>
-            item.id === id ? { ...item, ...updatedItem } : item
-          ),
-        })),
+      updateItem: async (updatedData: {
+        id: string;
+        title: string;
+        content: string;
+        url?: string;
+        tags?: string[];
+        favicon?: string;
+      }) => {
+        const { user, items } = get();
+        if (!user) return;
 
-      ////////////////
+        const { id, title, content, tags, url, favicon } = updatedData;
+
+        const docRef = doc(db, `documents/${user.uid}/todos/${id}`);
+
+        try {
+          await updateDoc(docRef, {
+            title,
+            content,
+            tags: tags || [],
+            ...(url && { url }),
+            ...(favicon && { favicon }),
+            updatedAt: new Date(),
+          });
+
+          set({
+            items: items.map((item) =>
+              item.id === id
+                ? {
+                    ...item,
+                    title,
+                    content,
+                    tags: tags || [],
+                    ...(url && { url }),
+                    ...(favicon && { favicon }),
+                    updatedAt: new Date(),
+                  }
+                : item
+            ),
+          });
+
+          console.log("Item updated successfully!");
+        } catch (error) {
+          console.error("Error updating item:", error);
+        }
+      },
 
       deleteItem: async (id: string) => {
         const { user, items } = get();
@@ -150,8 +180,6 @@ export const useStore = create<Store>()(
           console.error("Error deleting item:", error);
         }
       },
-
-      ////////////
 
       toggleTodo: async (id: string) => {
         const { user, items } = get();
@@ -175,9 +203,9 @@ export const useStore = create<Store>()(
           console.error("Error toggling todo:", error);
         }
       },
+
       setSearchQuery: (query) => set({ searchQuery: query }),
       toggleDarkMode: () => set((state) => ({ isDarkMode: !state.isDarkMode })),
-
       setSelectedNoteId: (id) => set({ selectedNoteId: id }),
       setEditingItem: (item) => set({ editingItem: item }),
       setSelectedType: (type) => set({ selectedType: type, selectedTag: null }),
