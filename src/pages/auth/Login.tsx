@@ -1,10 +1,9 @@
 import React, { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { Lock, MailIcon } from "lucide-react";
 import AuthTemplate from "./AuthTemplate";
 import TextField from "../../components/common/TextField";
 import { Button } from "../../components/common/Button";
-import { useStore } from "../../store";
 import { signInWithEmailAndPassword } from "firebase/auth";
 import { auth } from "../../lib/firebase";
 
@@ -13,7 +12,6 @@ export function Login() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const navigate = useNavigate();
-  const { setUser } = useStore();
   const [loading, setLoading] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -34,7 +32,6 @@ export function Login() {
         window.location.protocol === "https:" ? "Secure" : ""
       }`;
 
-      setUser(user);
       setLoading(false);
       navigate("/home");
     } catch (err) {
@@ -78,16 +75,6 @@ export function Login() {
         <Button type="submit" fullWidth loading={loading}>
           Log In
         </Button>
-
-        {/* <div className="text-center text-sm text-gray-600">
-          Don't have an account?{" "}
-          <Link
-            to="/signup"
-            className="text-teal-600 hover:text-teal-500 font-medium"
-          >
-            Sign Up
-          </Link>
-        </div> */}
       </form>
     </AuthTemplate>
   );

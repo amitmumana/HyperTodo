@@ -1,20 +1,22 @@
-import { useState, useEffect } from 'react';
-import { X, Hash } from 'lucide-react';
-import { useStore } from '../store';
+import { useState, useEffect } from "react";
+import { X, Hash } from "lucide-react";
+import { useStore } from "../store";
+import { db } from "../lib/firebase";
+import { doc, updateDoc } from "firebase/firestore";
 
 export function EditItemForm() {
   const { editingItem, updateItem, setEditingItem } = useStore();
-  const [title, setTitle] = useState('');
-  const [content, setContent] = useState('');
-  const [url, setUrl] = useState('');
-  const [tagInput, setTagInput] = useState('');
+  const [title, setTitle] = useState("");
+  const [content, setContent] = useState("");
+  const [url, setUrl] = useState("");
+  const [tagInput, setTagInput] = useState("");
   const [tags, setTags] = useState<string[]>([]);
 
   useEffect(() => {
     if (editingItem) {
       setTitle(editingItem.title);
       setContent(editingItem.content);
-      setUrl(editingItem.url || '');
+      setUrl(editingItem.url || "");
       setTags(editingItem.tags || []);
     }
   }, [editingItem]);
@@ -25,32 +27,47 @@ export function EditItemForm() {
     const trimmedTag = tagInput.trim();
     if (trimmedTag && !tags.includes(trimmedTag)) {
       setTags([...tags, trimmedTag]);
-      setTagInput('');
+      setTagInput("");
     }
   };
 
   const handleRemoveTag = (tagToRemove: string) => {
-    setTags(tags.filter(tag => tag !== tagToRemove));
+    setTags(tags.filter((tag) => tag !== tagToRemove));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
-    let favicon = '';
-    if (editingItem.type === 'url' && url) {
+
+    if (!editingItem) return;
+
+    let favicon = "";
+    if (editingItem.type === "url" && url) {
       try {
-        favicon = `https://www.google.com/s2/favicons?domain=${new URL(url).hostname}&sz=128`;
+        favicon = `https://www.google.com/s2/favicons?domain=${
+          new URL(url).hostname
+        }&sz=128`;
       } catch (error) {
-        console.error('Invalid URL');
+        console.error("Invalid URL");
       }
     }
 
-    updateItem(editingItem.id, {
-      title,
-      content,
-      tags: tags.length > 0 ? tags : undefined,
-      ...(editingItem.type === 'url' && { url, favicon }),
-    });
+    const userUid = useStore.getState().user?.uid;
+    console.log(userUid, "this is user uid");
+    const docRef = doc(db, `documents/${userUid}/todos/${editingItem.id}`);
+
+    try {
+      await updateDoc(docRef, {
+        title,
+        content,
+        tags: tags.length > 0 ? tags : [],
+        ...(editingItem.type === "url" && { url, favicon }),
+        updatedAt: new Date(),
+      });
+
+      console.log("Item updated successfully!");
+    } catch (error) {
+      console.error("Error updating item:", error);
+    }
 
     setEditingItem(null);
   };
@@ -60,7 +77,9 @@ export function EditItemForm() {
       <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl w-full max-w-md">
         <div className="flex items-center justify-between p-4 border-b dark:border-gray-700">
           <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
-            Edit {editingItem.type.charAt(0).toUpperCase() + editingItem.type.slice(1)}
+            Edit{" "}
+            {editingItem.type.charAt(0).toUpperCase() +
+              editingItem.type.slice(1)}
           </h2>
           <button
             onClick={() => setEditingItem(null)}
@@ -84,7 +103,7 @@ export function EditItemForm() {
             />
           </div>
 
-          {editingItem.type === 'url' && (
+          {editingItem.type === "url" && (
             <div>
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
                 URL
@@ -101,7 +120,7 @@ export function EditItemForm() {
 
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-              {editingItem.type === 'note' ? 'Content' : 'Description'}
+              {editingItem.type === "note" ? "Content" : "Description"}
             </label>
             <textarea
               value={content}
@@ -121,7 +140,9 @@ export function EditItemForm() {
                 type="text"
                 value={tagInput}
                 onChange={(e) => setTagInput(e.target.value)}
-                onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), handleAddTag())}
+                onKeyPress={(e) =>
+                  e.key === "Enter" && (e.preventDefault(), handleAddTag())
+                }
                 placeholder="Add a tag"
                 className="block flex-1 rounded-md border-gray-300 dark:border-gray-600 shadow-sm focus:border-blue-500 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
               />
@@ -151,7 +172,6 @@ export function EditItemForm() {
                     </button>
                   </span>
                 ))}
-              
               </div>
             )}
           </div>

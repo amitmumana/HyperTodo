@@ -1,5 +1,6 @@
 export type ItemType = "url" | "note" | "todo";
 import { User } from "firebase/auth";
+import { DocumentData, QueryDocumentSnapshot } from "firebase/firestore";
 
 export interface Item {
   id: string;
@@ -17,14 +18,21 @@ export interface Store {
   items: Item[];
   searchQuery: string;
   isDarkMode: boolean;
-  isSidebarOpen: boolean;
   selectedNoteId: string | null;
   editingItem: Item | null;
   selectedType: ItemType | "all" | "tags";
   selectedTag: string | null;
   isUser: any;
   user: User | null;
+  ////////////
+  lastDoc: any;
+  // QueryDocumentSnapshot<DocumentData> | null;
+  hasMore: boolean;
+  loading: boolean;
+  //////////
   addItem: (item: Omit<Item, "id" | "createdAt">) => void;
+  fetchMoreItems: () => Promise<void>;
+  //////////
   updateItem: (
     id: string,
     item: Partial<Omit<Item, "id" | "createdAt">>
@@ -33,7 +41,7 @@ export interface Store {
   toggleTodo: (id: string) => void;
   setSearchQuery: (query: string) => void;
   toggleDarkMode: () => void;
-  toggleSidebar: () => void;
+
   setSelectedNoteId: (id: string | null) => void;
   setEditingItem: (item: Item | null) => void;
   setSelectedType: (type: ItemType | "all" | "tags") => void;

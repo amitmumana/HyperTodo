@@ -3,16 +3,37 @@ import { AddItemForm } from "../components/AddItemForm";
 import { EditItemForm } from "../components/EditItemForm";
 import { ItemList } from "../components/ItemList";
 import { useStore } from "../store";
+import { useEffect, useState } from "react";
 
 const Home = () => {
-  const { user, searchQuery, setSearchQuery, isDarkMode, toggleDarkMode } =
-    useStore();
+  const searchQuery = useStore((state) => state.searchQuery);
+  const setSearchQuery = useStore((state) => state.setSearchQuery);
+  const isDarkMode = useStore((state) => state.isDarkMode);
+  const toggleDarkMode = useStore((state) => state.toggleDarkMode);
+  const fetchMoreItems = useStore((state) => state.fetchMoreItems);
+
+  // For debouncing
+  // const [debouncedSearchQuery, setDebouncedSearchQuery] = useState(searchQuery);
+
+  // useEffect(() => {
+  //   const timer = setTimeout(() => {
+  //     setDebouncedSearchQuery(searchQuery);
+  //   }, 500); // Adjust debounce delay as necessary (500ms)
+
+  //   return () => clearTimeout(timer); // Clear the previous timeout when the component re-renders or the searchQuery changes
+  // }, [searchQuery]);
+
+  // useEffect(() => {
+  //   if (debouncedSearchQuery) {
+  //     setSearchQuery(debouncedSearchQuery); // Update the global searchQuery in Zustand store after debounce
+  //   }
+  // }, [debouncedSearchQuery, setSearchQuery]);
 
   return (
     <div className="min-h-screen  px-6 py-8 max-w-md mx-auto ">
       <div className="flex justify-between items-center mb-8">
         <h1 className="text-2xl font-bold text-gray-900  dark:text-white">
-          Expiry Countdown
+          All items
         </h1>
         <div className="flex gap-5">
           <button

@@ -18,7 +18,8 @@ interface BeforeInstallPromptEvent extends Event {
 }
 
 function App() {
-  const { isDarkMode, setUser } = useStore();
+  const isDarkMode = useStore((state) => state.isDarkMode);
+  const setUser = useStore((state) => state.setUser);
   const [deferredPrompt, setDeferredPrompt] =
     useState<BeforeInstallPromptEvent | null>(null);
 
@@ -87,24 +88,6 @@ function App() {
                 </PublicRoute>
               }
             />
-            {/* <Route
-            path="/signup"
-            element={
-              <PublicRoute>
-                <SignUp />
-              </PublicRoute>
-            }
-          />
-
-          <Route
-            path="/forgot-password"
-            element={
-              <PublicRoute>
-                <ForgotPassword />
-              </PublicRoute>
-            }
-          /> */}
-
             <Route
               path="/home"
               element={

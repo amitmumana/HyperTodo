@@ -3,7 +3,7 @@ import { Plus, X, Hash } from "lucide-react";
 import { useStore } from "../store";
 import { ItemType } from "../types";
 import { db } from "../lib/firebase";
-import { addDoc, collection, doc, setDoc } from "firebase/firestore";
+import { addDoc, collection } from "firebase/firestore";
 
 export function AddItemForm() {
   const [isOpen, setIsOpen] = useState(false);
@@ -14,9 +14,7 @@ export function AddItemForm() {
   const [tagInput, setTagInput] = useState("");
   const [tags, setTags] = useState<string[]>([]);
 
-  const { user } = useStore();
-
-  // const { addItem } = useStore();
+  const { user, addItem } = useStore();
 
   const handleAddTag = () => {
     const trimmedTag = tagInput.trim();
@@ -44,18 +42,14 @@ export function AddItemForm() {
       }
     }
 
-    const userUid = user?.uid;
-    const todosCollectionRef = collection(db, `documents/${userUid}/todos`);
-
     try {
-      await addDoc(todosCollectionRef, {
+      addItem({
         type,
         title,
         content,
         tags: tags.length > 0 ? tags : undefined,
         ...(type === "url" && { url, favicon }),
         ...(type === "todo" && { completed: false }),
-        createdAt: new Date(),
       });
 
       console.log("Item added successfully!");
